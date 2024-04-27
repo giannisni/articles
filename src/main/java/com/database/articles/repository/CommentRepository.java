@@ -1,7 +1,9 @@
 package com.database.articles.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.database.articles.model.Comment;
+import java.util.List;
 
-import javax.xml.stream.events.Comment;
-
-public interface CommentRepository extends JpaRepository<Comment, Long> {}
+public interface CommentRepository extends JpaRepository<Comment, Long> {
+    List<Comment> findByArticleId(Long articleId);
+}
