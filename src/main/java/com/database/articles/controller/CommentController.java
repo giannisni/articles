@@ -1,67 +1,86 @@
 package com.database.articles.controller;
 
+import com.database.articles.DTO.CommentDTO;
 import com.database.articles.model.Article;
-import com.database.articles.repository.ArticleRepository;
+import com.database.articles.model.Comment;
+import com.database.articles.model.User;
+import com.database.articles.service.ArticleService;
+import com.database.articles.service.CommentService;
+import com.database.articles.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import com.database.articles.model.Comment;
-import com.database.articles.service.CommentService;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/articles/{articleId}/comments")
+@RequestMapping("/api/comments")
 public class CommentController {
-
     @Autowired
     private CommentService commentService;
-
-    @GetMapping
-    public List<Comment> getAllCommentsByArticleId(@PathVariable Long articleId) {
-        return commentService.getCommentsByArticleId(articleId);
-    }
-
+    @Autowired
+    private UserService userService;
 
     @Autowired
-    private ArticleRepository articleRepository;  // Ensure this is injected
-
+    private ArticleService articleService;
     @PostMapping
-    public Comment addComment(@PathVariable Long articleId, @RequestBody Comment comment) {
-        // Retrieve a managed reference to the Article, does not hit the database for data
-        Article article = articleRepository.getOne(articleId);
+    public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDTO, Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userService.findByUsername(userDetails.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
 
-        // Set the article to the comment
+        Article article = articleService.getArticleById(commentDTO.getArticleId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article not found"));
+
+        Comment comment = new Comment();
+        comment.setText(commentDTO.getText());
         comment.setArticle(article);
+        comment.setUser(user);
 
-        // Save and return the updated comment
-        return commentService.saveComment(comment);
+        Comment savedComment = commentService.saveComment(comment);
+        return ResponseEntity.ok(convertToDTO(savedComment));
     }
-    @PutMapping("/{commentId}")
-    public ResponseEntity<Comment> updateComment(@PathVariable Long articleId, @PathVariable Long commentId,
-                                                 @RequestBody Comment commentDetails, @RequestParam Long userId) {
-        if (!commentService.isUserCommentOwner(commentId, userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateComment(@PathVariable Long id, @RequestBody Comment commentDetails, Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return commentService.getCommentById(id)
+                .map(comment -> {
+                    if (!comment.getUser().getUsername().equals(userDetails.getUsername())) {
+                        // Return ResponseEntity with forbidden status when user is not the owner of the comment
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    }
+                    // Update the comment fields
+                    comment.setText(commentDetails.getText());
+                    Comment updatedComment = commentService.saveComment(comment);
+                    // Return the updated comment wrapped in ResponseEntity
+                    return ResponseEntity.ok(convertToDTO(updatedComment));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());  // Handle comment not found scenario
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long id, Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (commentService.isUserCommentOwner(id, userService.findByUsername(userDetails.getUsername()).getId())) {
+            commentService.deleteComment(id);
+            return ResponseEntity.ok().build();
         }
-        Comment existingComment = commentService.getCommentById(commentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
-
-        // Use articleRepository.getOne() to obtain a reference to the Article
-        Article articleRef = articleRepository.getOne(articleId);
-        existingComment.setArticle(articleRef); // Set the Article reference
-        existingComment.setText(commentDetails.getText()); // Update the text of the comment
-
-        return ResponseEntity.ok(commentService.saveComment(existingComment));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    @DeleteMapping("/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId, @RequestParam Long userId) {
-        if (!commentService.isUserCommentOwner(commentId, userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        commentService.deleteComment(commentId);
-        return ResponseEntity.ok().build();
+    public CommentDTO convertToDTO(Comment comment) {
+        CommentDTO dto = new CommentDTO();
+        dto.setId(comment.getId());
+        dto.setText(comment.getText());
+        dto.setArticleId(comment.getArticle().getId());
+        dto.setArticleTitle(comment.getArticle().getTitle());
+        return dto;
     }
+
 }
