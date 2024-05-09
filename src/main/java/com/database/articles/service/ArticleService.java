@@ -45,9 +45,21 @@ public class ArticleService {
     private final FeatureConfiguration featureConfiguration;
 
     @Autowired
-    public ArticleService(FeatureConfiguration featureConfiguration) {
+    public ArticleService(FeatureConfiguration featureConfiguration, ArticleRepository articleRepository, UserRepository userRepository) {
         this.featureConfiguration = featureConfiguration;
+        this.articleRepository = articleRepository;
+        this.userRepository = userRepository;
     }
+
+    // Setter methods for testing
+    public void setArticleRepository(ArticleRepository articleRepository) {
+        this.articleRepository = articleRepository;
+    }
+
+    public void setUserRepository(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
 //    @PostConstruct
 //    public void init() {
 //        log.info("Is full-text search enabled? {}", featureProperties.isFulltextSearchEnabled());
@@ -72,11 +84,15 @@ public class ArticleService {
     }
 
     private UserDTO convertToUserDTO(User user) {
+        if (user == null) {
+            return null; // Or create a default UserDTO as needed
+        }
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         return dto;
     }
+
 
     public List<ArticleDTO> findArticleDTOsByIds(List<Long> ids) {
         List<Article> articles = articleRepository.findAllById(ids);
@@ -109,17 +125,20 @@ public class ArticleService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Article article = new Article(); // Create a new Article entity
+        Article article = new Article();
         article.setTitle(articleDTO.getTitle());
         article.setAbstractText(articleDTO.getAbstractText());
         article.setPublicationDate(articleDTO.getPublicationDate());
-        article.setAuthors(new HashSet<>(articleDTO.getAuthors())); // Ensure authors are set correctly
-        article.setTags(new HashSet<>(articleDTO.getTags())); // Ensure tags are set correctly
+
+        // Safely handle potential null values for collections
+        article.setAuthors(articleDTO.getAuthors() != null ? new HashSet<>(articleDTO.getAuthors()) : new HashSet<>());
+        article.setTags(articleDTO.getTags() != null ? new HashSet<>(articleDTO.getTags()) : new HashSet<>());
         article.setUser(user);
 
         Article savedArticle = articleRepository.save(article);
-        return convertToArticleDTO(savedArticle); // Convert saved entity back to DTO
+        return convertToArticleDTO(savedArticle);
     }
+
 
 
     @Transactional

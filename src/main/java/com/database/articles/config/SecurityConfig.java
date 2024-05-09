@@ -34,8 +34,8 @@ public class SecurityConfig {
 
         return http.build();
     }        // Enable HTTP Basic Authentication, simple and suitable for initial testing
-        // Consider implementing logout handling if session management is used
+    // Consider implementing logout handling if session management is used
 
 
-    }
+}
 

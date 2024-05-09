@@ -15,6 +15,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/comments")
 public class CommentController {
@@ -73,6 +76,21 @@ public class CommentController {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+
+    @GetMapping("/article/{articleId}")
+    public ResponseEntity<List<CommentDTO>> getCommentsByArticle(@PathVariable Long articleId) {
+        List<Comment> comments = commentService.findCommentsByArticleId(articleId);
+        List<CommentDTO> commentDTOs = comments.stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(commentDTOs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CommentDTO> getCommentById(@PathVariable Long id) {
+        return commentService.getCommentById(id)
+                .map(comment -> ResponseEntity.ok(convertToDTO(comment)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
 
     public CommentDTO convertToDTO(Comment comment) {
         CommentDTO dto = new CommentDTO();
