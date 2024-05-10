@@ -1,5 +1,14 @@
-# Sample API Calls
+## Running the Application with Docker Compose
 
+To run the Articles API application along with its PostgreSQL database using Docker Compose, follow these steps:
+
+1. **Build and Start Services:**
+   Navigate to the root directory of the project where the `docker-compose.yml` file is located. Use the following command to build the application image and start the services:
+
+   ```bash
+   docker-compose up --build
+
+# Sample API Calls
 This section provides examples of how to populate the database with initial data using the API. These examples will help you understand how to interact with the API to perform various actions such as registering users and creating articles.
 
 ## Register Users
