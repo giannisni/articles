@@ -1,12 +1,47 @@
+## Preparing the Application
+
+Before running the application with Docker Compose, you need to build the executable JAR file using Maven. Follow these steps to prepare your application:
+
+1. **Install Java and Maven:**
+    - Ensure that Java JDK 17 and Maven are installed on your machine.
+    - You can check the installations by running `java -version` and `mvn -version` in your terminal.
+
+2. **Build the Application:**
+    - Navigate to the root directory of your project where the `pom.xml` file is located.
+    - Run the following Maven command to clean any previous builds and compile a new JAR file:
+
+      ```bash
+      mvn clean install
+      ```
+
+   This command compiles the application and packages it into a JAR file located in the `target/` directory of your project. It also runs any tests associated with the project and ensures that all dependencies are properly resolved.
+
 ## Running the Application with Docker Compose
 
-To run the Articles API application along with its PostgreSQL database using Docker Compose, follow these steps:
+Once you have built the JAR file, you can run the application along with its PostgreSQL database using Docker Compose. Follow these steps:
 
 1. **Build and Start Services:**
-   Navigate to the root directory of the project where the `docker-compose.yml` file is located. Use the following command to build the application image and start the services:
+    - Ensure you are in the root directory of the project where the `docker-compose.yml` file is located.
+    - Use the following command to build the Docker image for the application and start the services:
 
-   ```bash
-   docker-compose up --build
+      ```bash
+      docker-compose up --build
+      ```
+
+   This command builds the Docker image if it hasn't been built or if there are changes, and starts the containers defined in the `docker-compose.yml` file.
+
+2. **Access the Application:**
+    - With the containers running, the Articles API will be accessible at `http://localhost:8080/`.
+    - Use the API endpoints to interact with the application as described in the API documentation.
+
+3. **Stopping the Services:**
+    - To stop and remove the Docker Compose services, use the following command:
+
+      ```bash
+      docker-compose down
+      ```
+
+   This command stops the containers, networks, and any volumes created by Docker Compose unless configured otherwise.
 
 # Sample API Calls
 This section provides examples of how to populate the database with initial data using the API. These examples will help you understand how to interact with the API to perform various actions such as registering users and creating articles.
