@@ -1,49 +1,35 @@
--- Drop existing tables if they exist to allow reinitialization
-DROP TABLE IF EXISTS public.comments;
-DROP TABLE IF EXISTS public.articles;
-DROP TABLE IF EXISTS public.app_users;
-
--- Create the 'app_users' table
-CREATE TABLE public.app_users (
+-- Create users table
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    enabled BOOLEAN NOT NULL
 );
 
--- Create the 'articles' table
-CREATE TABLE public.articles (
+-- Create articles table
+CREATE TABLE articles (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    abstract_text TEXT,
-    publication_date TIMESTAMP WITHOUT TIME ZONE,
-    user_id INTEGER,
-    CONSTRAINT fk_articles_users FOREIGN KEY (user_id)
-        REFERENCES public.app_users (id) ON UPDATE NO ACTION ON DELETE SET NULL
+    abstract_text TEXT NOT NULL,
+    publication_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id)
 );
 
--- Create the 'comments' table
-CREATE TABLE public.comments (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    text VARCHAR(255) NOT NULL,
-    article_id INTEGER,
-    user_id INTEGER,
-    CONSTRAINT fk_comments_articles FOREIGN KEY (article_id)
-        REFERENCES public.articles (id) ON UPDATE NO ACTION ON DELETE CASCADE,
-    CONSTRAINT fk_comments_users FOREIGN KEY (user_id)
-        REFERENCES public.app_users (id) ON UPDATE NO ACTION ON DELETE SET NULL
-);
+-- Insert sample users
+INSERT INTO users (username, password, enabled) VALUES
+('user1', 'pass1', TRUE),
+('user2', 'pass2', TRUE);
 
--- Insert sample data into 'app_users'
-INSERT INTO public.app_users (username) VALUES
-('user1'),
-('user2');
-
--- Insert sample data into 'articles'
-INSERT INTO public.articles (title, abstract_text, publication_date, user_id) VALUES
-('Exploring Spring Boot', 'A deep dive into the capabilities and features of Spring Boot for building modern microservices.', '2024-04-30 14:15:22.000+00:00', (SELECT id FROM public.app_users WHERE username = 'user1')),
-('Introduction to Docker', 'Learn how to use Docker for deploying containerized applications.', '2024-05-01 09:00:00.000+00:00', (SELECT id FROM public.app_users WHERE username = 'user2'));
-
--- Insert sample data into 'comments'
-INSERT INTO public.comments (created_at, text, article_id, user_id) VALUES
-('2024-05-02 08:30:00.000+00:00', 'Great article on Spring Boot!', (SELECT id FROM public.articles WHERE title = 'Exploring Spring Boot'), (SELECT id FROM public.app_users WHERE username = 'user2')),
-('2024-05-02 09:45:00.000+00:00', 'Very informative, thanks!', (SELECT id FROM public.articles WHERE title = 'Introduction to Docker'), (SELECT id FROM public.app_users WHERE username = 'user1'));
+-- Insert sample articles using the user IDs directly
+-- Dates are provided in ISO 8601 format including the timezone
+INSERT INTO articles (title, abstract_text, publication_date, user_id) VALUES
+('Exploring Spring Boot', 'A deep dive into the capabilities and features of Spring Boot for building modern microservices.', '2024-01-01T00:00:00+00', 1),
+('Advanced Java Techniques', 'Explore advanced Java techniques for optimizing performance and scalability.', '2024-01-02T00:00:00+00', 1),
+('Microservices with Spring Boot', 'Learn how to structure a scalable and maintainable microservice architecture with Spring Boot.', '2024-01-03T00:00:00+00', 2),
+('API Design Best Practices', 'Best practices for designing robust, effective APIs using Spring Boot.', '2024-01-04T00:00:00+00', 2),
+('Spring Security Essentials', 'An overview of Spring Security and how to implement security in your applications effectively.', '2024-01-05T00:00:00+00', 1),
+('Reactive Programming in Java', 'Dive into reactive programming with Java and Spring to build highly responsive applications.', '2024-01-06T00:00:00+00', 1),
+('Database Optimization Strategies', 'Techniques and strategies for optimizing database interactions in enterprise Java applications.', '2024-01-07T00:00:00+00', 2),
+('Cloud-Native Java Applications', 'Building and deploying cloud-native applications using Spring Boot and cloud infrastructure.', '2024-01-08T00:00:00+00', 2),
+('Continuous Integration in DevOps', 'Integrating continuous integration practices into your DevOps workflow for better software delivery.', '2024-01-09T00:00:00+00', 1),
+('Performance Tuning in Spring', 'A guide to performance tuning your Spring applications for maximum efficiency.', '2024-01-10T00:00:00+00', 2);

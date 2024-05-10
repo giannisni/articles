@@ -60,10 +60,6 @@ public class ArticleService {
         this.userRepository = userRepository;
     }
 
-//    @PostConstruct
-//    public void init() {
-//        log.info("Is full-text search enabled? {}", featureProperties.isFulltextSearchEnabled());
-//    }
 
     public List<ArticleDTO> getAllArticles() {
         List<Article> articles = articleRepository.findAll();

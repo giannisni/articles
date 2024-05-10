@@ -130,11 +130,7 @@ public class ArticleController {
         ArticleDTO savedArticle = articleService.createArticle(articleDTO, username);
         return ResponseEntity.ok(savedArticle);
     }
-    @DeleteMapping("/all")
-    public ResponseEntity<Void> deleteAllArticles() {
-        articleService.deleteAllArticles();
-        return ResponseEntity.ok().build();
-    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ArticleDTO> updateArticle(@PathVariable Long id, @RequestBody ArticleDTO articleDTO) {
         try {
