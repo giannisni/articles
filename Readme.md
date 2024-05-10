@@ -108,7 +108,7 @@ curl -X POST http://localhost:8080/api/articles \
       ```json
       {
         "username": "newuser",
-        "password": "password123",
+        "password": "password123"
       }
       ```
 
